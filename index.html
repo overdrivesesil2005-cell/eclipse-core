@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECLIPSE OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon: #00ffff; --bg: #050510; --panel: rgba(10,15,30,0.8); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; height: 100vh; display: flex; }
+        .sidebar { width: 80px; background: rgba(0,0,0,0.5); border-right: 1px solid rgba(0,255,255,0.2); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 15px; }
+        .logo { width: 50px; height: 50px; background: rgba(0,255,255,0.1); border: 2px solid var(--neon); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 0 15px var(--neon); }
+        .icon { width: 45px; height: 45px; background: rgba(0,255,255,0.05); border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; }
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .header { padding: 15px 20px; border-bottom: 1px solid rgba(0,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-family: 'Orbitron'; color: var(--neon); font-size: 20px; }
+        .chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .msg { background: rgba(0,255,255,0.03); padding: 12px; border-radius: 8px; border-left: 2px solid var(--neon); }
+        .msg.user { border-left-color: #ff00ff; }
+        .author { font-family: 'Orbitron'; font-size: 12px; color: var(--neon); margin-bottom: 5px; }
+        .msg.user .author { color: #ff00ff; }
+        .input-area { padding: 20px; display: flex; gap: 10px; }
+        input { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,255,0.3); padding: 12px; color: white; border-radius: 5px; outline: none; font-family: 'Rajdhani'; }
+        button { background: var(--neon); border: none; padding: 0 20px; border-radius: 5px; font-weight: bold; cursor: pointer; color: black; font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">🐺</div>
+        <div class="icon">🖥️</div>
+        <div class="icon">🎮</div>
+        <div class="icon">💬</div>
+        <div class="icon">🛡️</div>
+    </div>
+    <div class="main">
+        <div class="header">
+            <h1>ECLIPSE OS</h1>
+            <div id="status" style="color: #ff0000; font-size: 12px; font-family: 'Orbitron';">OFFLINE</div>
+        </div>
+        <div class="chat" id="chat">
+            <div class="msg"><div class="author">SYSTEM</div><div class="text">Добро пожаловать. Напишите /ai привет.</div></div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="input" placeholder="Сообщение или /ai..." onkeypress="if(event.key==='Enter') send()">
+            <button onclick="send()">➤</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const chat = document.getElementById('chat');
+        const input = document.getElementById('input');
+        const status = document.getElementById('status');
+        const userName = prompt('Позывной:') || 'Агент';
+
+        socket.on('connect', () => { 
+            status.innerText = "ONLINE"; 
+            status.style.color = "#00ff00"; 
+            socket.emit('join', { name: userName }); 
+        });
+        
+        socket.on('disconnect', () => {
+            status.innerText = "OFFLINE";
+            status.style.color = "#ff0000";
+        });
+
+        socket.on('message', (data) => {
+            const div = document.createElement('div');
+            div.className = `msg ${data.user === userName ? 'user' : ''}`;
+            div.innerHTML = `<div class="author">${data.user}</div><div class="text">${data.text}</div>`;
+            chat.appendChild(div); 
+            chat.scrollTop = chat.scrollHeight;
+        });
+
+        function send() {
+            const text = input.value.trim();
+            if(!text) return;
+            socket.emit('message', { user: userName, text, timestamp: new Date() });
+            input.value = '';
+        }
+    </script>
+</body>
+</html>
