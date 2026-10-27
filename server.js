@@ -26,7 +26,7 @@ async function askAI(prompt) {
         if (chatHistory.length > 10) chatHistory.shift(); // Храним последние 10 сообщений
 
         const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-            model: 'deepseek/deepseek-v4-flash:free', // Бесплатная модель
+            model: 'qwen/qwen3.6-plus:free', 
             messages: [
                 { role: "system", content: "Ты — VSEZNAYKA, умный ИИ-помощник внутри системы ECLIPSE OS. Отвечай кратко, по делу, с легкой иронией и уважением к создателю (snegoc)." },
                 ...chatHistory
